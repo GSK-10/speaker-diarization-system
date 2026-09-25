@@ -1,0 +1,16 @@
+# Tested with Python 3.9 on Windows. FFmpeg must also be on PATH.
+Flask==3.0.2
+openai-whisper==20231117
+torch==2.0.1
+torchaudio==2.0.2
+pyannote.audio==3.1.1
+pyannote.core==5.0.0
+speechbrain==0.5.16
+huggingface-hub==0.20.3
+numpy==1.23.5
+scipy==1.12.0
+scikit-learn==1.4.1.post1
+tqdm==4.66.2
+pvrecorder==1.2.2
+noisereduce==3.0.0
+vaderSentiment==3.3.2

@@ -1,0 +1,16 @@
+.git/
+.venv/
+.vscode/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.log
+.DS_Store
+static/uploads/
+static/generalAudioAndOutput/
+research-notebooks/
+test_accuracy_commented.ipynb
+test.wav
+utils/inputDatasets/
+TestAudios/conv2.wav
+TestAudios/conv4.wav
