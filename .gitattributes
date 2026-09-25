@@ -1,0 +1,2 @@
+# Research notebooks stay in the repository but do not represent the app's source-language mix.
+*.ipynb linguist-documentation

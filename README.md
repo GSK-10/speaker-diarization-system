@@ -6,6 +6,10 @@ The work concentrates on joining several tasks in one usable flow: accepting an 
 
 **Status:** Runs locally with Python 3.9 or Docker Desktop. A public demo is not currently hosted; the resource and upload constraints are explained below.
 
+## Research background
+
+This application grew out of our work on speaker diarization, speech transcription, and conversation sentiment. The related, co-authored paper is [*Advancing Audio Processing and Emotion Recognition through Deep Learning Techniques*](https://www.internationaljournalssrg.org/IJEEE/paper-details?Id=1043) (International Journal of Electrical and Electronics Engineering, 2025). The notebooks in this repository preserve parts of the experimentation and evaluation behind the project.
+
 ## Screenshots
 
 These screens come from the locally tested Docker container. The results page shows a real analysis of the included `conv0.wav` sample.
@@ -62,13 +66,11 @@ speaker-diarization/
 └── research-notebooks/            # Earlier notebooks, outputs, and notes
 ```
 
-The Docker image includes the interface and all six samples offered on the upload page. Research notebooks remain in the repository for reference and are excluded from Docker. `conv2.wav` and `conv4.wav` remain for the accuracy notebook, but are not offered in the app or copied into the image.
+The Docker image includes the interface and all six samples offered on the upload page. Research notebooks remain in the repository for reference and are excluded from Docker. `conv2.wav` and `conv4.wav` remain for the accuracy notebook, but are not offered in the app or copied into the image. Git ignores virtual environments, generated uploads, intermediate audio, and downloaded model weights.
 
 ### Change the colors
 
 The original page structure remains in the HTML templates. `static/theme.css` defines the dark palette, angular controls, and responsive layout. Edit its variables to recolor the interface: `--color-page-start` and `--color-page-end` set the background; `--color-primary` and `--color-primary-soft` set the accent; `--color-surface` sets the cards; and `--color-speaker-1` through `--color-speaker-5` set transcript label colors.
-
-The project background and published paper are available at the [SSRG research article](https://www.internationaljournalssrg.org/IJEEE/paper-details?Id=1043).
 
 ## Use the app
 
@@ -125,13 +127,13 @@ docker run --rm --name speaker-diarization -p 7860:7860 speaker-diarization
 
 Open <http://localhost:7860>. Docker installs Python 3.9, FFmpeg, CPU-only PyTorch wheels, and the pinned Python packages, then starts one Gunicorn worker. A single worker matters because the current diarization code shares intermediate filenames and model state. The first container start needs internet access to download the model weights. Stop it with `Ctrl+C`.
 
-The rebuilt image is about **3.55 GB** because PyTorch, numerical libraries, FFmpeg, and audio processing dependencies are large. The six bundled WAV samples total only about **39 MB**. Browser recording uses your browser's microphone; the older server-side microphone route cannot access a microphone inside a normal container.
+Browser recording uses your browser's microphone; the older server-side microphone route cannot access a microphone inside a normal container. The image size and hosting requirements are detailed below.
 
-## Why there is no public demo
+## Constraints for a public demo
 
-The project is CPU intensive and loads both Whisper and a speaker embedding model. In the local Docker test, the 27-second sample took about **20–40 seconds** to process after startup. Multi-minute recordings have not been benchmarked. Memory, CPU time, and model startup costs make a small hosted instance a poor fit for the current implementation.
+The Docker image is about **3.55 GB**, mostly because of PyTorch, numerical libraries, FFmpeg, and audio processing dependencies; the six bundled WAV samples total only about **39 MB**. A public host would need room for the image and downloaded model weights, plus enough memory and CPU for inference. In the local Docker test, the 27-second sample took about **20–40 seconds** to process after startup. Multi-minute recordings have not been benchmarked.
 
-Vercel now supports Docker-based Functions, but a direct deployment still needs changes: [Function requests and responses are limited to 4.5 MB](https://vercel.com/docs/functions/limitations), while the included 27-second WAV is about 4.8 MB and every long sample is larger. Uploaded audio and intermediate files also use local paths and shared filenames, which need redesign for concurrent, short-lived instances. We are publishing a reproducible local and Docker build rather than claiming an untested live service.
+Vercel now supports Docker-based Functions, but a direct deployment still needs changes: [Function requests and responses are limited to 4.5 MB](https://vercel.com/docs/functions/limitations), while the included 27-second WAV is about 4.8 MB and every long sample is larger. Uploaded audio and intermediate files also use local paths and shared filenames, which need redesign for concurrent, short-lived instances. For now, the app is available as a reproducible local and Docker build.
 
 ## Verification and limits
 
@@ -141,6 +143,6 @@ Vercel now supports Docker-based Functions, but a direct deployment still needs 
 - The app stores uploaded clips under Flask's public `static/` path and writes intermediate audio to fixed names. The results `.txt` download is generated from the page, but uploaded and intermediate audio can remain until removed. Run it locally for now.
 - This repository does not include downloaded model weights. Setup or first container start downloads them.
 
-## Repository notes
+## More from the developer
 
-GitHub is the source of truth for the code, documentation, screenshots, and research notebooks. The repository excludes virtual environments, generated uploads, intermediate audio, and downloaded model weights. Review the included sample audio and research material before redistributing it elsewhere.
+Explore my other projects and experience at [shivagaddam.dev](https://shivagaddam.dev/).
