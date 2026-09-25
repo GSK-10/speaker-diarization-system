@@ -1,4 +1,4 @@
-# Speaker Diarization and Conversation Sentiment
+# Speaker Diarization System
 
 This project turns a spoken conversation into a transcript grouped by estimated speaker, with sentiment labels for each speech segment, each speaker, and the conversation overall. It is a local research/demo application built around **English audio with 2–5 speakers**.
 
