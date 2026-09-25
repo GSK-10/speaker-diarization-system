@@ -4,7 +4,25 @@ This project turns a spoken conversation into a transcript grouped by estimated 
 
 The work concentrates on joining several tasks in one usable flow: accepting an audio file or browser recording, transcribing speech, assigning speaker labels, and showing simple sentiment results in a Flask interface. Speaker labels are estimates (`SPEAKER-1`, `SPEAKER-2`, and so on), not names or verified identities. The sentiment labels are rules derived from VADER scores; they are not an emotion recognition model.
 
-## What it uses
+**Status:** Runs locally with Python 3.9 or Docker Desktop. A public demo is not currently hosted; the resource and upload constraints are explained below.
+
+## Screenshots
+
+These screens come from the locally tested Docker container. The results page shows a real analysis of the included `conv0.wav` sample.
+
+### Upload audio
+
+![Dark upload page with file selection, speaker count, and sample downloads](docs/screenshots/upload.jpg)
+
+### Record audio
+
+![Dark browser recording page with duration and speaker selection](docs/screenshots/record.jpg)
+
+### Analysis results
+
+![Results page showing overall sentiment and speaker-labelled transcript](docs/screenshots/results.jpg)
+
+## Tech stack
 
 | Part | Technology | Role |
 | --- | --- | --- |
@@ -29,6 +47,7 @@ speaker-diarization/
 ├── setup_git_bash.sh               # Python 3.9 setup on the host
 ├── Dockerfile                      # Linux container image
 ├── .dockerignore                   # Keeps local and historical files out of the image
+├── docs/screenshots/              # Upload, recording, and results screenshots
 ├── templates/                      # Upload, recording, and results pages
 ├── static/
 │   ├── theme.css                   # Shared color variables and responsive layout
@@ -39,15 +58,15 @@ speaker-diarization/
 │   ├── Models/                      # Diarization, recording, and sentiment code
 │   └── audioFiles/long_audio_files/ # Long downloadable samples
 ├── TestAudios/                    # Short samples and reference transcripts
-├── test_accuracy_commented.ipynb # Evaluation notebook
-└── research-notebooks/           # Earlier notebooks, outputs, and notes
+├── test_accuracy_commented.ipynb  # Evaluation notebook
+└── research-notebooks/            # Earlier notebooks, outputs, and notes
 ```
 
-The Docker image copies the interface and all six samples offered on the upload page. The original page structure remains in the HTML templates; `static/theme.css` supplies the dark palette, angular controls, and responsive layout. The research notebooks remain in the project directory for reference and are excluded from Docker. `conv2.wav` and `conv4.wav` remain for the accuracy notebook, but are not offered in the app or copied into the image.
+The Docker image includes the interface and all six samples offered on the upload page. Research notebooks remain in the repository for reference and are excluded from Docker. `conv2.wav` and `conv4.wav` remain for the accuracy notebook, but are not offered in the app or copied into the image.
 
 ### Change the colors
 
-Edit the variables at the top of `static/theme.css`. `--color-page-start` and `--color-page-end` set the background, `--color-primary` and `--color-primary-soft` set the purple gradient, `--color-surface` sets the cards, and `--color-speaker-1` through `--color-speaker-5` set the transcript label colors. The templates use these variables, so one edit updates matching colors across all pages.
+The original page structure remains in the HTML templates. `static/theme.css` defines the dark palette, angular controls, and responsive layout. Edit its variables to recolor the interface: `--color-page-start` and `--color-page-end` set the background; `--color-primary` and `--color-primary-soft` set the accent; `--color-surface` sets the cards; and `--color-speaker-1` through `--color-speaker-5` set transcript label colors.
 
 The project background and published paper are available at the [SSRG research article](https://www.internationaljournalssrg.org/IJEEE/paper-details?Id=1043).
 
@@ -64,9 +83,9 @@ The project background and published paper are available at the [SSRG research a
 
 Choose a speaker count no greater than the number of speech segments Whisper finds. Very short, silent, or unclear clips can fail to produce enough segments. `base.en` is an English model.
 
-## Run locally with Git Bash
+## Run locally
 
-This path has been checked on Windows with **Python 3.9** and **FFmpeg** available on `PATH`. Docker offers a Linux environment below.
+This path has been checked on Windows with **Python 3.9** and **FFmpeg** available on `PATH`. Use Git Bash from the project root.
 
 1. Install Python 3.9 and FFmpeg. In Git Bash, confirm both are visible:
 
@@ -75,7 +94,7 @@ This path has been checked on Windows with **Python 3.9** and **FFmpeg** availab
    ffmpeg -version
    ```
 
-2. From the project root, create the virtual environment, install the pinned requirements, check dependencies, and cache the two models:
+2. Create the virtual environment, install the pinned requirements, check dependencies, and cache the two models:
 
    ```bash
    bash setup_git_bash.sh
@@ -83,7 +102,7 @@ This path has been checked on Windows with **Python 3.9** and **FFmpeg** availab
 
    If `python` points to another version, set `PYTHON_BIN` to a Python 3.9 executable before running the script.
 
-   `setup_git_bash.sh` is an optional convenience script added during the local setup repair. Git itself does not require it, and Docker does not use it.
+   `setup_git_bash.sh` is optional convenience setup. Git itself does not require it, and Docker does not use it.
 
 3. Start Flask:
 
@@ -106,16 +125,22 @@ docker run --rm --name speaker-diarization -p 7860:7860 speaker-diarization
 
 Open <http://localhost:7860>. Docker installs Python 3.9, FFmpeg, CPU-only PyTorch wheels, and the pinned Python packages, then starts one Gunicorn worker. A single worker matters because the current diarization code shares intermediate filenames and model state. The first container start needs internet access to download the model weights. Stop it with `Ctrl+C`.
 
-The built image was about 3.5 GB on the tested Docker Desktop setup because PyTorch and audio processing libraries are large. Container-local uploads, generated results, and model caches are temporary unless you attach storage. Browser recording uses your browser's microphone; the older server-side microphone route cannot access a microphone inside a normal container.
+The rebuilt image is about **3.55 GB** because PyTorch, numerical libraries, FFmpeg, and audio processing dependencies are large. The six bundled WAV samples total only about **39 MB**. Browser recording uses your browser's microphone; the older server-side microphone route cannot access a microphone inside a normal container.
 
-## Current scope and limitations
+## Why there is no public demo
 
-- The short sample has been processed successfully both in the Windows Python 3.9 environment and through the local Linux Docker container. The container returned HTTP 200 with speaker labels; the long sample download also returned HTTP 200. Long-sample processing time has not been measured.
+The project is CPU intensive and loads both Whisper and a speaker embedding model. In the local Docker test, the 27-second sample took about **20–40 seconds** to process after startup. Multi-minute recordings have not been benchmarked. Memory, CPU time, and model startup costs make a small hosted instance a poor fit for the current implementation.
+
+Vercel now supports Docker-based Functions, but a direct deployment still needs changes: [Function requests and responses are limited to 4.5 MB](https://vercel.com/docs/functions/limitations), while the included 27-second WAV is about 4.8 MB and every long sample is larger. Uploaded audio and intermediate files also use local paths and shared filenames, which need redesign for concurrent, short-lived instances. We are publishing a reproducible local and Docker build rather than claiming an untested live service.
+
+## Verification and limits
+
+- `conv0.wav` was processed successfully in both the Windows Python 3.9 environment and the rebuilt Linux Docker container. The container returned HTTP 200 with speaker labels, and the results `.txt` download was checked.
+- All six listed sample downloads respond. The two shorter research clips are deliberately absent from the app and image.
 - Diarization relies on a selected speaker count and Whisper's speech segments. Labels and transcript accuracy vary with the audio.
-- The current app stores uploaded clips under Flask's public `static/` path and writes intermediate audio to fixed names. The results download is generated from the page and is not retained as a text file, but uploaded and intermediate audio can remain until removed. Run it locally for now; those paths need redesign before exposing it as a public service.
+- The app stores uploaded clips under Flask's public `static/` path and writes intermediate audio to fixed names. The results `.txt` download is generated from the page, but uploaded and intermediate audio can remain until removed. Run it locally for now.
 - This repository does not include downloaded model weights. Setup or first container start downloads them.
-- Public hosting is intentionally out of scope for this version. A working local Docker image is the immediate deployment target; a later host would need storage, privacy, concurrency, resource, and sample-audio redistribution review.
 
-## Repository status
+## Repository notes
 
-The local Git repository is already initialized, so there is no need to run `git init` again. An `origin` remote is configured. Review the included audio and historical files before publishing, particularly their size and redistribution rights. Pushing and public hosting are left to the repository owner.
+GitHub is the source of truth for the code, documentation, screenshots, and research notebooks. The repository excludes virtual environments, generated uploads, intermediate audio, and downloaded model weights. Review the included sample audio and research material before redistributing it elsewhere.
